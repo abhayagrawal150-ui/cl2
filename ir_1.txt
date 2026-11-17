@@ -1,0 +1,35 @@
+# Text preprocessing: Stop Word Removal and Stemming
+import nltk
+import re
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+
+# Download required NLTK data
+nltk.download('stopwords')
+# Input text document
+text = input("Enter a text document: ")
+# Step 1: Convert text to lowercase
+text = text.lower()
+# Step 2: Remove punctuation and numbers
+text = re.sub(r'[^a-z\s]', '', text)
+# Step 3: Tokenization
+words = text.split()
+print("\nOriginal Words:")
+print(words)
+
+# Step 4: Stop word removal
+stop_words = set(stopwords.words('english'))
+filtered_words = [word for word in words if word not in stop_words]
+print("\nAfter Stop Word Removal:")
+print(filtered_words)
+
+# Step 5: Stemming
+stemmer = PorterStemmer()
+stemmed_words = [stemmer.stem(word) for word in filtered_words]
+print("\nAfter Stemming:")
+print(stemmed_words)
+
+# Final preprocessed document
+processed_text = ' '.join(stemmed_words)
+print("\nFinal Preprocessed Text:")
+print(processed_text)

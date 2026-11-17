@@ -1,0 +1,49 @@
+"""
+Assignment 1: Implementation of 16-Qubit Random Number Generator
+"""
+
+from qiskit import QuantumCircuit
+from qiskit_aer import AerSimulator
+from qiskit.visualization import plot_histogram
+import matplotlib.pyplot as plt
+
+n = 16
+qc = QuantumCircuit(n, n)
+
+# Generate random bits
+qc.h(range(n))
+qc.measure(range(n), range(n))
+print(qc.draw(output='text'))
+
+# Generate one random 16-bit number
+simulator = AerSimulator()
+result = simulator.run(qc, shots=1).result()
+counts = result.get_counts()
+bitstring = list(counts)[0]
+number = int(bitstring, 2)
+print("\nRandom 16-bit string:", bitstring)
+print("Random number (decimal):", number)
+
+# Generate multiple results
+result = simulator.run(qc, shots=1024).result()
+counts = result.get_counts()
+
+# Show only top 10 outcomes in histogram
+top_counts = dict(
+    sorted(counts.items(), key=lambda x: x[1], reverse=True)[:10]
+)
+print("\nTop 10 measurement results:")
+print(top_counts)
+
+# Save histogram
+fig = plot_histogram(
+    top_counts,
+    title="16-Qubit Random Number Generator"
+)
+fig.savefig(
+    "assignment1_output.png",
+    dpi=120,
+    bbox_inches="tight"
+)
+plt.show()
+print("\nHistogram saved as assignment1_output.png")

@@ -1,0 +1,68 @@
+"""
+Assignment 3: Implement Quantum Teleportation Algorithm in Python
+"""
+
+from qiskit import QuantumCircuit
+from qiskit_aer import AerSimulator
+from qiskit.visualization import plot_histogram
+import matplotlib.pyplot as plt
+import numpy as np
+
+# 1. Create 3-qubit circuit and 3 classical bits
+qc = QuantumCircuit(3, 3)
+
+# 2. Prepare Alice's quantum state
+qc.ry(np.pi / 3, 0)
+qc.rz(np.pi / 4, 0)
+
+# 3. Create Bell pair shared by Alice and Bob
+qc.h(1)
+qc.cx(1, 2)
+
+# 4. Alice performs Bell measurement
+qc.cx(0, 1)
+qc.h(0)
+
+qc.measure(0, 0)
+qc.measure(1, 1)
+
+# 5. Bob applies conditional corrections
+# Apply X if Alice's second measurement is 1
+with qc.if_test((qc.clbits[1], 1)):
+    qc.x(2)
+
+# Apply Z if Alice's first measurement is 1
+with qc.if_test((qc.clbits[0], 1)):
+    qc.z(2)
+
+# 6. Measure Bob's qubit
+qc.measure(2, 2)
+
+# 7. Display the circuit
+print("Quantum Teleportation Circuit:")
+print(qc.draw(output="text", fold=120))
+
+# 8. Run the simulation
+simulator = AerSimulator()
+result = simulator.run(qc, shots=1024).result()
+
+# 9. Display measurement results
+counts = result.get_counts()
+print("\nMeasurement Counts:")
+print(counts)
+
+# 10. Plot and save histogram
+fig = plot_histogram(
+    counts,
+    title="Quantum Teleportation Results"
+)
+
+fig.savefig(
+    "assignment3_output.png",
+    dpi=120,
+    bbox_inches="tight"
+)
+
+plt.show()
+
+print("\nHistogram saved as assignment3_output.png")

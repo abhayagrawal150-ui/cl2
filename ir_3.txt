@@ -1,0 +1,69 @@
+#!pip install pgmpy
+import pandas as pd
+import numpy as np
+from pgmpy.models import DiscreteBayesianNetwork
+from pgmpy.parameter_estimator import DiscreteMLE
+from pgmpy.inference import VariableElimination
+
+# 1. Load dataset
+data = pd.read_csv("Heart_disease_cleveland_new.csv")
+data.replace('?', np.nan, inplace=True)
+data.dropna(inplace=True)
+
+# 2. Rename target column
+if 'heartdisease' in data.columns:
+    data.rename(columns={'heartdisease': 'target'}, inplace=True)
+elif 'num' in data.columns:
+    data.rename(columns={'num': 'target'}, inplace=True)
+
+# 3. Convert into numeric values
+data = data.apply(pd.to_numeric, errors='coerce').dropna()
+data['target'] = data['target'].astype(int)
+
+# 4. Discretize continuous columns
+cols = ['age', 'trestbps', 'chol', 'thalach', 'oldpeak']
+bins = {}
+
+for col in cols:
+    data[col], bins[col] = pd.qcut(
+        data[col], 4, labels=False,
+        duplicates='drop', retbins=True
+    )
+
+data = data.astype(int).reset_index(drop=True)
+
+# 5. Construct Bayesian Network
+features = [c for c in data.columns if c != 'target']
+model = DiscreteBayesianNetwork([(c, 'target') for c in features])
+
+# 6. Train the model
+model.fit(data, estimator=DiscreteMLE())
+print("Bayesian Network created:", model.check_model())
+
+# 7. Perform inference
+infer = VariableElimination(model)
+
+print("\nInferencing with Bayesian Network:")
+
+# Given Age = 28
+age_bin = np.digitize(28, bins['age'][1:-1])
+
+print("\n1. Probability of HeartDisease given Age = 28")
+result = infer.query(
+    variables=['target'],
+    evidence={'age': int(age_bin)}
+)
+print(result)
+
+# Given Cholesterol = 100
+chol_bin = np.digitize(100, bins['chol'][1:-1])
+
+print("\n2. Probability of HeartDisease given cholesterol = 100")
+result = infer.query(
+    variables=['target'],
+    evidence={'chol': int(chol_bin)}
+)
+print(result)
+
+print("\nDiagnosis Completed Successfully")
+print(data.columns.tolist())

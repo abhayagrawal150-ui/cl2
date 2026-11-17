@@ -1,0 +1,38 @@
+# Document Retrieval Using Inverted Files
+# Collection of documents
+documents = {
+    1: "Information retrieval is used to search documents",
+    2: "Python is used for information processing",
+    3: "Document retrieval helps users find information",
+    4: "Python is a programming language"
+}
+
+# Step 1: Create an inverted index
+inverted_index = {}
+
+for doc_id, text in documents.items():
+    words = text.lower().split()
+
+    for word in words:
+        if word not in inverted_index:
+            inverted_index[word] = []
+
+        if doc_id not in inverted_index[word]:
+            inverted_index[word].append(doc_id)
+
+# Display inverted index
+print("Inverted Index:")
+for word, doc_ids in sorted(inverted_index.items()):
+    print(word, ":", doc_ids)
+
+# Step 2: Retrieve documents using a search query
+query = input("\nEnter a search word: ").lower().strip()
+
+# Step 3: Search the inverted index
+if query in inverted_index:
+    print("\nDocuments containing the word:", query)
+
+    for doc_id in inverted_index[query]:
+        print("Document", doc_id, ":", documents[doc_id])
+else:
+    print("\nNo documents found for the given word.")

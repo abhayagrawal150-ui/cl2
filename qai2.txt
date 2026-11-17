@@ -1,0 +1,87 @@
+"""
+Assignment 2: Tackle Noise with Error Correction 3-Qubit Bit-Flip Error Correction Code
+"""
+
+from qiskit import QuantumCircuit
+from qiskit_aer import AerSimulator
+from qiskit_aer.noise import NoiseModel, pauli_error
+from qiskit.visualization import plot_histogram
+import matplotlib.pyplot as plt
+
+# 1. Define bit-flip noise with probability 0.3
+p_error = 0.3
+bit_flip = pauli_error([
+    ('X', p_error),
+    ('I', 1 - p_error)
+])
+
+# Apply noise only to the ID gate
+noise_model = NoiseModel()
+noise_model.add_all_qubit_quantum_error(bit_flip, ['id'])
+
+# 2. Create circuit: 3 data qubits and 2 syndrome qubits
+qc = QuantumCircuit(5, 3)
+
+# 3. Encode logical |1> as |111>
+qc.x(0)
+qc.cx(0, 1)
+qc.cx(0, 2)
+
+# 4. Introduce bit-flip noise on qubit 1
+qc.id(1)
+
+# 5. Detect errors using syndrome qubits
+qc.cx(0, 3)
+qc.cx(1, 3)
+qc.cx(1, 4)
+qc.cx(2, 4)
+
+# 6. Measure the syndrome
+qc.measure(3, 0)
+qc.measure(4, 1)
+
+# 7. Correct errors based on syndrome
+with qc.if_test((qc.clbits[0], 1)):
+    with qc.if_test((qc.clbits[1], 0)):
+        qc.x(0)
+
+with qc.if_test((qc.clbits[0], 1)):
+    with qc.if_test((qc.clbits[1], 1)):
+        qc.x(1)
+
+with qc.if_test((qc.clbits[0], 0)):
+    with qc.if_test((qc.clbits[1], 1)):
+        qc.x(2)
+
+# 8. Measure the corrected logical qubit
+qc.measure(0, 2)
+
+# 9. Display the circuit
+print("Quantum Circuit:")
+print(qc.draw(output='text', fold=120))
+
+# 10. Run the noisy simulation
+simulator = AerSimulator(noise_model=noise_model)
+result = simulator.run(qc, shots=1024).result()
+
+counts = result.get_counts()
+
+# 11. Display measurement counts
+print("\nMeasurement Counts:")
+print(counts)
+
+# 12. Plot and save the histogram
+fig = plot_histogram(
+    counts,
+    title="3-Qubit Bit-Flip Error Correction"
+)
+
+fig.savefig(
+    "assignment2_output.png",
+    dpi=120,
+    bbox_inches="tight"
+)
+
+plt.show()
+
+print("\nHistogram saved as assignment2_output.png")

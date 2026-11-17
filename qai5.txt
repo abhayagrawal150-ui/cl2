@@ -1,0 +1,67 @@
+"""
+Assignment 5: Implementing a 5-qubit Quantum Fourier Transform
+"""
+
+import numpy as np
+from qiskit import QuantumCircuit
+from qiskit_aer import AerSimulator
+from qiskit.visualization import plot_histogram
+import matplotlib.pyplot as plt
+
+n = 5
+
+# QFT functions
+def qft_rotations(qc, n):
+    if n == 0:
+        return
+    n -= 1
+    qc.h(n)
+    for q in range(n):
+        qc.cp(np.pi / 2 ** (n - q), q, n)
+    qft_rotations(qc, n)
+
+def qft(qc, n):
+    qft_rotations(qc, n)
+    for q in range(n // 2):
+        qc.swap(q, n - q - 1)
+
+# Create 5-qubit circuit
+qc = QuantumCircuit(n, n)
+
+# Prepare |00011> = 3
+qc.x(0)
+qc.x(1)
+
+# Apply QFT
+qft(qc, n)
+
+# Measure
+qc.measure(range(n), range(n))
+
+# Display circuit
+print(qc.draw(output='text', fold=120))
+
+# Run simulation
+simulator = AerSimulator()
+result = simulator.run(qc, shots=2048).result()
+
+counts = result.get_counts()
+
+print("\nMeasurement counts:")
+print(counts)
+
+# Plot and save histogram
+fig = plot_histogram(
+    counts,
+    title="5-Qubit Quantum Fourier Transform Output"
+)
+
+fig.savefig(
+    "assignment5_output.png",
+    dpi=120,
+    bbox_inches="tight"
+)
+
+plt.show()
+
+print("\nHistogram saved as assignment5_output.png")

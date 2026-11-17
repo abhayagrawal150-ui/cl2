@@ -1,0 +1,20 @@
+environment creation in the folder of practicals in cmd type
+python -m venv qc_env
+qc_env\Scripts\activate
+pip install -r requirements.txt
+
+
+to run 
+qc_env\Scripts\activate
+jupyter notebook
+
+for qai 
+qiskit
+qiskit_aer
+pylatexenc
+network
+
+for ir
+scipy
+pgmpy
+-U scikit-learn
